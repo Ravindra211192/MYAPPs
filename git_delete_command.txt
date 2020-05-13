@@ -9,7 +9,10 @@ Try to synchronize the branch list using:
 
 To delete files from the staged area:
 	--> git rm filename
+Then make a commit stating the file is deleted from the repo
+	--> git commit -m "The file is deleted"
 To unstage the file from the staged area:
 	--> git restore --staged filename
+	--> git reset HEAD filename
 To restore the deleted file from the staged area:
 	--> git restore filenme
