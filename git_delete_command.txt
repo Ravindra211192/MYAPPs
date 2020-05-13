@@ -1,0 +1,8 @@
+To delete repo branch locally:
+	-->git branch -d localbranchname
+To delete repo branch remotely:
+	-->git push origin --delete remoteBranchName
+
+Try to synchronize the branch list using:
+	-->git fetch -p
+    The -p flag means "prune". After fetching, branches which no longer exist on the remote will be deleted.
