@@ -6,3 +6,10 @@ To delete repo branch remotely:
 Try to synchronize the branch list using:
 	-->git fetch -p
     The -p flag means "prune". After fetching, branches which no longer exist on the remote will be deleted.
+
+To delete files from the staged area:
+	--> git rm filename
+To unstage the file from the staged area:
+	--> git restore --staged filename
+To restore the deleted file from the staged area:
+	--> git restore filenme
