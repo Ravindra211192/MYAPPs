@@ -1,0 +1,1 @@
+char passwrd_Elektrobit=WjQm77ah;
