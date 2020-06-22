@@ -41,3 +41,4 @@ sympy==1.6
 tornado==4.5.3
 update==0.0.1
 validators==0.14.1
+wheel==0.33.6
