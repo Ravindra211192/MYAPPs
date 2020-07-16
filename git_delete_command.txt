@@ -8,7 +8,7 @@ Try to synchronize the branch list using:
     The -p flag means "prune". After fetching, branches which no longer exist on the remote will be deleted.
 
 To delete files from the staged area:
-	--> git rm filename
+	--> git rm -f filename
 Then make a commit stating the file is deleted from the repo
 	--> git commit -m "The file is deleted"
 To unstage the file from the staged area:
