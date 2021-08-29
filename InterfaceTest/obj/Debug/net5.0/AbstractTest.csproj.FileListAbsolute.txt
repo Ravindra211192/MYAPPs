@@ -1,0 +1,16 @@
+C:\Users\Chand\source\repos\AbstractTest\bin\Debug\net5.0\AbstractTest.exe
+C:\Users\Chand\source\repos\AbstractTest\bin\Debug\net5.0\AbstractTest.deps.json
+C:\Users\Chand\source\repos\AbstractTest\bin\Debug\net5.0\AbstractTest.runtimeconfig.json
+C:\Users\Chand\source\repos\AbstractTest\bin\Debug\net5.0\AbstractTest.runtimeconfig.dev.json
+C:\Users\Chand\source\repos\AbstractTest\bin\Debug\net5.0\AbstractTest.dll
+C:\Users\Chand\source\repos\AbstractTest\bin\Debug\net5.0\ref\AbstractTest.dll
+C:\Users\Chand\source\repos\AbstractTest\bin\Debug\net5.0\AbstractTest.pdb
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\AbstractTest.csprojAssemblyReference.cache
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\AbstractTest.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\AbstractTest.AssemblyInfoInputs.cache
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\AbstractTest.AssemblyInfo.cs
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\AbstractTest.csproj.CoreCompileInputs.cache
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\AbstractTest.dll
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\ref\AbstractTest.dll
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\AbstractTest.pdb
+C:\Users\Chand\source\repos\AbstractTest\obj\Debug\net5.0\AbstractTest.genruntimeconfig.cache
