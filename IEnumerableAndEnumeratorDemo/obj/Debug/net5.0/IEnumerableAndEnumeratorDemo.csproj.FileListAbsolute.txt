@@ -1,0 +1,16 @@
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\bin\Debug\net5.0\IEnumerableAndEnumeratorDemo.exe
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\bin\Debug\net5.0\IEnumerableAndEnumeratorDemo.deps.json
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\bin\Debug\net5.0\IEnumerableAndEnumeratorDemo.runtimeconfig.json
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\bin\Debug\net5.0\IEnumerableAndEnumeratorDemo.runtimeconfig.dev.json
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\bin\Debug\net5.0\IEnumerableAndEnumeratorDemo.dll
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\bin\Debug\net5.0\ref\IEnumerableAndEnumeratorDemo.dll
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\bin\Debug\net5.0\IEnumerableAndEnumeratorDemo.pdb
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\IEnumerableAndEnumeratorDemo.csprojAssemblyReference.cache
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\IEnumerableAndEnumeratorDemo.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\IEnumerableAndEnumeratorDemo.AssemblyInfoInputs.cache
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\IEnumerableAndEnumeratorDemo.AssemblyInfo.cs
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\IEnumerableAndEnumeratorDemo.csproj.CoreCompileInputs.cache
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\IEnumerableAndEnumeratorDemo.dll
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\ref\IEnumerableAndEnumeratorDemo.dll
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\IEnumerableAndEnumeratorDemo.pdb
+C:\Users\Chand\Desktop\GIT_MyWork\MYAPPs\IEnumerableAndEnumeratorDemo\obj\Debug\net5.0\IEnumerableAndEnumeratorDemo.genruntimeconfig.cache
