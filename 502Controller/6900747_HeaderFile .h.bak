@@ -1,0 +1,382 @@
+/////MAIN DEFINE
+#include "LeistungsteilComKommando.h"
+
+#define _Enable_OC 23
+#define _Enable_Root 40
+#ifdef _Enable_OC
+    #define OC_Option 1 //0 +1 increment(test)    //1 R filtered  //2 Uist filtered    //3 Iist filtered  //4 R raw 
+#else
+    #define _Enable_Rtrigger 26 
+#endif
+#define _Enable_LOWPASS_filter 24       //enable lowpass filter or not
+#ifdef _Enable_LOWPASS_filter
+    #define _Filterwalue_U  4
+    #define _Filterwalue_I  4
+    #define _Filterwalue_R  50
+    #define _Filterversion  2          //1 = GIL version, 2 = WIEGAND version ---> better Wiegand!
+#else
+    #define _AverageFilter 25           //enable AVG /4 filter for Uist
+#endif
+#define _Root_Option 2     //0 = none, 1 = Uregulation, 2 = Iregulation + DeltaU, 3 = PWM constant + DeltaI
+//#define _DeltaUenabled 70
+#define _DeltaRenabled 71
+//#define _DeltaRfilter 72
+#define _enable_P_Ureg  0   //0 --> no proportional part of Uregulator active, 1 --> Proportional part /32 active, 2 --> Proportional part /16 active 
+#define _enable_I_Ureg  1   //0 --> no integral part of Uregulator active, 1 --> Integral part /32 active, 2 --> Integral part /16 active 
+#define _DeltaI_trigger 10    //deltaI trigger in (A)
+#define _DeltaU_trigger 20      //deltaU trigger in resolution 0.1V = 4 dec: 20 = 0,5V
+//#define _Rtrigger_mOhm 5
+//#define _DeltaR_trigger (_Rtrigger_mOhm*10)
+#define _DeltaR_trigger 50
+#define _Roffset_value 40
+#define _ConstantI_time_trigger 27        //constant Isoll time trigger in 15us resolution ---> 10 = 150us, 58 --> 800us
+//#define _Alternate_PWM 28
+
+
+//
+#define SW_VERSION_ARTIKEL_NR				6900840
+#define SW_VERSION_HAUPT					0       //  max 99
+#define SW_VERSION_NEBEN					5       //  max 99
+#define SW_VERSION_REVISION					8       //  max 99
+#define SW_VERSION_BUILD					6       //  max 99
+
+// Multiplikations Faktoren der einzelnen Versions Nummern (Haupt, Neben, Revision, Build)
+
+#define FAKTOR_SW_VERSION_HAUPT				1000000
+#define FAKTOR_SW_VERSION_NEBEN				10000
+#define FAKTOR_SW_VERSION_REVISION			100
+
+#define SW_VERSION			((SW_VERSION_HAUPT * FAKTOR_SW_VERSION_HAUPT) + \
+							(SW_VERSION_NEBEN * FAKTOR_SW_VERSION_NEBEN) + \
+							(SW_VERSION_REVISION * FAKTOR_SW_VERSION_REVISION) + \
+							SW_VERSION_BUILD)
+
+/*******************************************************************************/
+/*********************je nach Model einstellen**********************************/
+#define Korr  0              // Korrekturwert fuer Iist wegen EP32GS502 ADC-Problem
+//#define _Probe				// testen ohne Anlauf!! Spannungen hochdrehen!!
+//#define ausPFC				// zum PFC abschalten beim Testen
+
+//****** Trafos definieren. Wenn beide auskommentiert-> "normaler Trafo (Tiger 9:2)
+#define Trafo450            // Trafo mit Flachkupfer 9:2
+//#define Trafo500            // Trafo mit 10:2 Uebersetzung, Flachkupfer
+
+// beide ohne Grund icht veraendern!!!! 
+//#define immerEinPFC		// PFC immer eingeschaltet  für test 
+#define _istPFC				// wenn PFC - Board 6900747 da, fuer Berechnungen der UZKs und Trafo.
+//#define LMess                 // bei Kontakt L messen
+
+/*******************************************************************************/
+/*******************************************************************************/
+
+//#define _KompamPIN			// Komparator_2 oder 4 auf "Info" ausfuehren
+ 
+// Versionen der Kurzschluss - Ueberwachung
+//#define LOCH				// bei der Spannungsflanke Strom-Loch auf xA und y us
+//#define KPWM				// Konstant PWM 1ms nach dem Kurzschluss uebernommen.
+//#define POWER				// Konstant Leistung bei Wiederzuenden vom Kurzschluss
+//#define KLB				// Kurzlichtbogen symulieren
+
+/////////////////////////////////////// AD  //////////////////////////////////////
+// Label der analogen Kanaele
+
+// 12 bit Werte!
+#define Uist					(ADCBUF0)
+#define SC						(ADCBUF1)		// Schweissstrom vom Wandler sek. 1024A 3,3V. Version vom Prozessor "FJ" 1,65V (R13 500R !!!!!!!
+#define U24     				(ADCBUF4)		// 24V Messung
+#define U15         			(ADCBUF5)		// +15V , -15V Ueberwachung
+#define An_Er					(ADCBUF7)		// Sollwert vom Poti
+
+///////////////////////////////////////Schwelle//////////////////////////////////
+#define done							1
+#define none							0
+
+#define _200V							200				// Voltschwelle fuer Phaseerkennung
+
+// Werte mal 4 weil 12 bit Wandler
+#define V15Soll							832             // 16V/-16V  mit Spannungsteiler 100k/200k//10k, ueberwachter Wert
+#define V15Toll							160             // 2V mit Spannungsteiler 100k/200k/10k, Toleranzbereich der Spannung
+#define V24Soll							2710			// 24V mit 100k/10k
+#define V24Tollp						240				// plus um 10%
+#define V24Tollm						600				// nach unten mehr	bis um 18V
+
+// die Werte sind als 10 bit (V)
+#define _Sym_Toll_m						-50				// max. Symmetrieabweihung minus in V
+#define _Sym_Toll_p						50				// max. Symmetrieabweihung plus in V
+#define Uzk_max_3Ph						800				// maximal Spannung 3Ph
+#define Uzk_min_3Ph  	      			200				// minimal Spannung 3Ph (177Vac)
+#define Uzk_be_max_3Ph					800				// maximal Spannung 3Ph im Betrieb (565VAC)
+#define BULK_MAX						420
+
+#define _1s								1000
+#define _2s								2000
+#define _1ms							250             // x 4us
+
+/////////////////////////////////////// Trafo, Drossel //////////////////////////////////
+#define DTv								225				// Treiberverzoergerung vorn 240us, bei Ein 225ns /1.066
+#define DTh								300				// Treiberverzoergerung hinten 320us, bei Aus (dovon IGBT um 180!))
+#define Dd								141				// recovery der Dioden 150ns
+#define DT								666				// Dtv+Dth+Dd
+//
+#ifdef _istPFC
+	#ifdef Trafo450											// super Trafo
+		#define LS							2300			// in nH Streuung vom Trafo  
+		#define LM							1400			// in uH Trafo-Hauptinduktivitaet
+		#define Ue1							45				// Uebesetzung vom Trafo in 0,1 Schritten
+		#define LsUe						135         	// LS/Ue1 (nH/(N*4))/*Takt (1,06ns) .4 weil 12bit
+        #define IMAX                        3750            // um 850A
+    #endif 
+    #ifdef Trafo500                                         // Supertrafo 10:2 
+		#define LS							1300			// in nH Streuung vom Trafo 
+		#define LM							1500			// in uH Trafo-Hauptinduktivitaet
+		#define Ue1							50				// Uebesetzung vom Trafo in 0,1 Schritten
+		#define LsUe						115         	// LS/Ue1 (nH/(N*4))*Takt (1,06ns) ?. 4 weil 12bit
+        #define IMAX                        3750            // um 850A
+    #else                                                   // Trafo 4:1, wie Tieger
+		#define LS							3102			// in nH Streuung vom Trafo 4250nH (neue Schienen)
+		#define LM							1200			// in uH Trafo-Hauptinduktivitaet
+		#define Ue1							45				// Uebesetzung vom Trafo in 0,1 Schritten
+		#define LsUe						183         	// LS/Ue1 (nH/(N*4))*Takt (1,06ns) 
+        #define IMAX                        2800            // um 700A
+	#endif
+	
+#else	// ohne PFC, andere Trafo 4:1
+	#define LS							1948			// in nH Streuung vom Trafo 3000nH(neue Schienen) / Stromkorrektur (1,54 oPFC)
+	#define LM							950				// in uH Trafo-Hauptinduktivitaet
+	#define Ue1							40				// Uebesetzung vom Trafo in 0,1 Sritten
+	#define LsUe						129				// LS/Ue1 (nH/N*4)*Takt (1,06ns)
+	#define IMAX    					2600			// um 640A
+#endif
+
+#define Imax3PH                			3750            // 190A -auf Prim. 
+//
+// ///////////////////  andere Konstanten fuer Stromberechnung EP Version ///////////////
+#define IDC								27				// in A*4, feste Vorspannung vom Komparator, um 22mV (3,3V und 100k_pull-up/0,667k)
+#define IRAMP							3000			// in A*4/us x100  ,kuenstliche Rampe am Komparator, (9Vss ueber 56k auf 1k||2k1 in 6,38us)
+#define C4								55				// C4=PTPER*8/1887. Mal 8 fuer leichtere Rechnung von TastV
+
+///////////// NTC Schwelle gerechnet mit Pull Up Widerstand von 2k2 noch FJ auf Prim.
+#define NTC_Auf                       1022 	 			// NTC offen
+#define NTC_KS                        40				// NTC Kurzschluss
+#define NTC_C38                       730				// 38 Grad C
+#define NTC_C40                       710
+#define NTC_C45                       660
+#define NTC_C50                       608
+#define NTC_C60                       502
+#define NTC_C85                       276
+#define NTC_C90                       242
+#define NTC_C100                      183
+#define NTC_C110                      140
+#define NTC_C120                      105
+#define NTC_C125                      92
+
+/////////////////////////////////////// Ports /////////////////////////////////////
+#define LED_F					LATBbits.LATB8			// LED Fehler
+#define LED_B					LATBbits.LATB0			// LED Betrieb
+#define RF						LATAbits.LATA3			// SW -Ausgang, als Open Col zum fuer Stromwandler2
+#define L_S						LATBbits.LATB4			// Testpin am Programmsockel
+#define Info					LATBbits.LATB15			// Info" an Verfahren ueber opto, Uaus>8V bei 1
+#define Aux						PORTBbits.RB5			// Ein Aus von aussen ueber Opto. Bei low ->ein, jetzt 
+                               
+extern volatile unsigned int H_W_Er;
+
+extern volatile unsigned int Timer;
+extern volatile unsigned int Prog;
+
+extern volatile signed int Soll_wert, Soll_k;
+extern volatile signed int AB_Sym;
+extern volatile unsigned int Sollwert_Hardware;
+extern volatile unsigned int Uzk_mid1;
+extern volatile unsigned int Uzk_mid2;	
+extern volatile unsigned int Uzk;
+extern volatile unsigned int UzkAvr;
+extern volatile unsigned int Uaus;
+extern volatile unsigned int NetzAusfall;
+extern volatile unsigned int power;
+extern volatile unsigned int Uzkmax;
+extern UART_DATA TxDaten;
+extern UART_DATA RxDaten;	
+extern DATEN P5_Sendungen[];
+
+
+extern volatile unsigned int Hold;
+extern volatile unsigned int Timer_cut_off;		// max Zeit zwischen Kommunikation - Packeten
+extern volatile unsigned int INV_Enable;
+extern volatile unsigned int FSymFlag;
+extern volatile unsigned int PFC_Kommando;
+extern volatile unsigned int Freigabe;
+extern volatile unsigned int Isoll, Iecht;
+
+extern volatile unsigned int TimerUART;
+extern volatile unsigned char CkS;
+extern volatile unsigned int UART_1,UART_2,UART_3,UART_4;
+extern volatile unsigned int Flag_UART;
+extern volatile unsigned int Cmd;
+extern volatile unsigned int RampeKorr;
+extern volatile unsigned int PWMH;
+extern volatile unsigned int ProtokollTimer;
+extern volatile signed int Sym_relative;
+extern volatile unsigned int State_Sym;
+extern volatile unsigned int P5_Daten[];
+extern  unsigned int P1_Daten[];
+extern volatile unsigned int Netz_zeit;
+extern volatile unsigned int trig2;
+
+extern volatile unsigned int pdc1;
+
+extern volatile unsigned int Uampl;
+//extern volatile unsigned int C5;
+
+extern volatile unsigned char Inhib;
+extern volatile unsigned char PFC_Status;
+extern volatile signed int Sym,Sym2;
+extern volatile unsigned int OnOff, OnOff_Strom;
+extern volatile unsigned int maxTimerUART;
+extern volatile unsigned int  DLsv;
+extern volatile unsigned int LaufTimer;
+
+extern volatile unsigned int Wert;
+extern volatile unsigned int Lkreis;
+extern volatile unsigned int LkreisC;
+extern volatile unsigned int Lmess;
+extern volatile unsigned int lrechnen;
+extern volatile unsigned int t1, t2, IL1, IL2;
+extern volatile unsigned int Rmess;
+extern volatile unsigned int K1,K, IL3,Ut;
+extern volatile unsigned int Ianf;
+extern volatile unsigned int t22;
+
+extern volatile unsigned int ueberstrom;
+extern volatile unsigned int TimerRelais;
+extern volatile unsigned int  Isoll_alt;	
+extern volatile unsigned int Rampe;
+extern volatile signed int Istep;
+
+extern volatile unsigned int Err;
+extern volatile unsigned int Relais;
+
+extern volatile unsigned int Ilm;
+extern volatile unsigned int Timer_cut_off;
+extern volatile unsigned int SPI_Timer;
+
+extern volatile unsigned int maxTimerUART;
+
+extern volatile unsigned int Hold_M;
+extern volatile unsigned int Page;
+
+extern volatile unsigned int I2_UART;
+extern volatile unsigned int baud_rq;
+extern volatile unsigned int baud_change_needed;
+extern volatile unsigned int uart_change_start_done;
+extern volatile unsigned int PWM_counter;
+extern volatile unsigned int Failure_code;
+extern volatile unsigned int PFC_UZK_cnt;
+
+extern volatile unsigned int sum_new_uist;
+extern volatile unsigned int sum_old_uist;
+extern volatile unsigned int y_new_uist;
+extern volatile signed int y_diff_uist;
+extern volatile unsigned int sum_new_Iist;
+extern volatile unsigned int sum_old_Iist;
+extern volatile unsigned int y_new_Iist;
+extern volatile signed int y_diff_Iist;
+extern volatile unsigned int sum_new_Rist;
+extern volatile unsigned int sum_old_Rist;
+extern volatile unsigned int y_new_Rist;
+extern volatile signed int y_diff_Rist;
+extern volatile unsigned int new_R;
+extern volatile unsigned int Ist_wert;
+extern volatile unsigned int uist_filtered;
+extern volatile unsigned int trigger_root;
+extern volatile unsigned int alu_mode_activ;
+extern volatile unsigned int Alive_timeout_cnt;
+
+void FSym(void);
+void ioLock (void);
+void ioUnlock (void);
+void SPI_Kom_Master(unsigned int PFC_Kommand);		// Kommandos Senden ueber SPI
+void SPI_Konfig_Master (void);
+void UART_Manangement(void);
+void UARTinit(void);
+void Senden4Byte(void);									// Senden der 4 Bytes
+void InitSST(void);										// Datem zum Initialisieren der SST vorbereiten
+void Operation(void);									// Daten von oder zu SST empfangen oder senden
+void EmpfangOperation(void);							// Empfangene Daten von SST im Operation - Modus bearbeiten
+void TimeSendung(void);									// welche Daten gerade zu senden sind
+void StromRegler (unsigned int ZeitMessWert);
+void Kommunikation(void);								// Uart, Protokoll Aufruf
+void Probe(void);										// Test ohne feste Netzspannung. Langsam Hochfahren!!!
+void KurzschlussBech(void);								// Focus-Prozess
+void Kurzlb(void);										// KurzLB symulieren
+void PWM1(void);
+void Lrechnen(void);
+void InitOC(void);
+void Init_UART(void);
+
+#define _USER_PROG_INIT_33					0x0000		// Anfang User Program
+#define _USER_PROG_END_33          	        0x2800		// Ende User Program
+#define _PAGE_SIZE_33						0x400		// Page Groesse
+#define _ROW_SIZE_33						128    		// Reie Groesse
+#define _Schlussel_program					251  	    // Updating Schlussel
+
+#define Komparator_1						CMP1DAC		// Uist dedektor
+#define Komparator_2						CMP2DAC		// fuer Strom Ueberwachung, max.
+#define Komparator_3						CMP3DAC     // Strom Regelung PWM1
+#define Komparator_4						CMP4DAC     // Strom Regelung PWM2
+
+//UART SET UP DEFINITION
+#define CLOCK_FREQ_D16						4250000  	 // frequenza di clock divisa per 16 (68MHz/16)
+#define CLOCK_FREQ_D4						17500000    // frequenza di clock divisa per 4 (68MHz/4)
+
+#define BAUD								4000000		// fuer UART ,um 4M Baut
+
+#define _TMR1_ON							0x8000 		// zum Einschalten T1
+#define TMR1_OFF							0
+#define TMR1_CLEAR							0
+
+// PWM def.
+#define PWM_P				13000							// 
+#define PWM_D				6000							// max. duty PWM1 6,36us	46,15% ==>  6000 * 1,06ns
+#define _InterruptZeit		6150                        	//PWM Period/2 - 600 - 500 -> . Interrupt ausloesen fuer PWM. 520ns Inerrupt Ausfuehrung!? In der Summe um 150ns vom Ende der Periode um Port lesen zu koennen.
+
+//#define _ZeitErfassung		0								// ab wann wird die Zeit gemessen
+
+//#define _DutyOff1			0
+
+#define _SendTimer			3								// alle 3 PWM - Perioden
+
+void Delay_ms (unsigned int Mx);
+void Protokoll(void);				// sendet Daten
+									
+
+typedef struct Fb
+ {
+  unsigned int PFC:1;		// PFC
+  unsigned int ANL:1;		// Anlauf
+  unsigned int PHA:1;		// Phasen
+  unsigned int UZK:1;		// UZK
+  unsigned int SYM:1;		//Symmetrie
+  unsigned int SPN:1;		// Spannung abgeschaltet
+  unsigned int NTC1:1;		// Temp. NTC1, INV IMS
+  unsigned int NTC2:1;		// Temp. NTC2, PFC IMS
+  unsigned int VERS:1;		// Versorgung +15/-15
+ } Fbits;					// Fehlerbits
+
+//typedef struct Dro
+// {
+//  unsigned int DStrom;		// Delta Strom_max-Strom_Mitte
+//  unsigned int DSpannung;	// Spannung an der Drossel, Uampl-Uaus
+//  unsigned int Timp;			// Impuls, Drosselanstieg.
+// } S_KREIS;
+
+typedef union Fby
+ {
+  unsigned int Val;			// wenn 0 keine Fehler
+  Fbits bits;
+ } FEHLER;
+
+extern FEHLER Fehler;
+
+#define _PFC_Ein	1
+#define _PFC_Aus	0
+#define PFC_FEHLER			0			
